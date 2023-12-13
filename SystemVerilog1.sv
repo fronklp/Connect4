@@ -1,21 +1,10 @@
-module con4FINAL (
-		clk,
-		rst,
-		moveChosen,
-		direction, 
-		VGA_CLK,   						//	VGA Clock 
- 		VGA_HS,							//	VGA H_SYNC 
- 		VGA_VS,							//	VGA V_SYNC 
- 		VGA_BLANK_N,					//	VGA BLANK 
- 		VGA_SYNC_N,						//	VGA SYNC 
- 		VGA_R,   						//	VGA Red[9:0] 
- 		VGA_G,	 						//	VGA Green[9:0] 
- 		VGA_B   							//	VGA Blue[9:0] 
+module con4FINALSV (
+    input clk,
+    input rst,
+    input moveChosen,
+    input direction,
+    output reg [1:0]gameBoard [5:0][6:0]
 );
-input clk,
-		rst,
-		moveChosen,
-		direction;
 reg [2:0]S; // current state
 reg [2:0]NS; // next state
 reg [2:0]C; // current column
@@ -25,60 +14,31 @@ reg win1; // turns high if player 1 wins
 reg win2; // turns high if player 2 wins
 reg drawFinal; // turns high if match is drawn
 reg [2:0]selectedCol; // holds the currently selected column
-reg [7:0]selectedCell;
+reg selectedCell;
 reg [2:0]col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap; // column capacity
-reg [1:0]gameBoard[41:0];
-/* VGA */
-wire [2:0]player_color;
-assign player_color = turn == 2'b01 ? 3'b100 : 3'b001;
-wire [1:0]turn;
-reg [7:0] cell_x; 
-reg [6:0] cell_y; 
-
 initial begin
     {col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap} = 3'b000; // init capacity as 0
 end
+initial begin // set the whole game board to 0
+    {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+    gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+    gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+    gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+    gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+    gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+    gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+    } = 2'b00;
+end
 
 /* helper module instantiations */ 
+checkMove checks(selectedMove, col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap, validMove);
 
+/* IDEAS TO IMPLEMENT:
+~Give each column a count to determine which cell to drop into
+~
 
-// VGA OUTS
- 	output			VGA_CLK;   				//	VGA Clock 
- 	output			VGA_HS;					//	VGA H_SYNC 
- 	output			VGA_VS;					//	VGA V_SYNC 
- 	output			VGA_BLANK_N;				//	VGA BLANK 
- 	output			VGA_SYNC_N;				//	VGA SYNC 
- 	output	[9:0]	VGA_R;   				//	VGA Red[9:0] 
- 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0] 
- 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0] 
+*/
 
-	wire [7:0] x; 
- 	wire [6:0] y; 
- 	wire writeEn; 
-
-	// Create an Instance of a VGA controller - there can be only one!
-	// Define the number of colours as well as the initial background
-	// image file (.MIF) for the controller.
-	vga_adapter VGA(
-			.resetn(rst),
-			.clock(clk),
-			.colour(player_color),
-			.x(cell_x),
-			.y(cell_y),
-			.plot(writeEn),
-			/* Signals for the DAC to drive the monitor. */
-			.VGA_R(VGA_R),
-			.VGA_G(VGA_G),
-			.VGA_B(VGA_B),
-			.VGA_HS(VGA_HS),
-			.VGA_VS(VGA_VS),
-			.VGA_BLANK(VGA_BLANK_N),
-			.VGA_SYNC(VGA_SYNC_N),
-			.VGA_CLK(VGA_CLK));
-		defparam VGA.RESOLUTION = "160x120";		
-		defparam VGA.MONOCHROME = "FALSE";
-		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-		defparam VGA.BACKGROUND_IMAGE = "black.mif";
 /* parameters to represent the states */
 parameter   P1_MOVE = 3'b000,
             CHECK_1_WIN = 3'b001,
@@ -250,56 +210,49 @@ begin
                     1'd0:   if(col0Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 0 + (col0Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col0Cap][selectedCol] <= 2'b01;
                                 col0Cap <= col0Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd1:   if(col1Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 1 + (col1Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col1Cap][selectedCol] <= 2'b01;
                                 col1Cap <= col1Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd2:   if(col2Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 2 + (col2Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col2Cap][selectedCol] <= 2'b01;
                                 col2Cap <= col2Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd3:   if(col3Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 3 + (col3Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col3Cap][selectedCol] <= 2'b01;
                                 col3Cap <= col3Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd0:   if(col4Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 4 + (col4Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col4Cap][selectedCol] <= 2'b01;
                                 col4Cap <= col4Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd5:   if(col5Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 5 + (col5Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col5Cap][selectedCol] <= 2'b01;
                                 col5Cap <= col5Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd6:   if(col6Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 6 + (col6Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b01;
+                                gameBoard[col6Cap][selectedCol] <= 2'b01;
                                 col6Cap <= col6Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -311,7 +264,14 @@ begin
 
         end
         WIN1:   begin // game over screen: 1 wins
-            
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b01;
         end
         P2_MOVE:    begin
             if(moveChosen == 1'b0)
@@ -319,56 +279,49 @@ begin
                     1'd0:   if(col0Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 0 + (col0Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col0Cap][selectedCol] <= 2'b10;
                                 col0Cap <= col0Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd1:   if(col0Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 1 + (col1Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col1Cap][selectedCol] <= 2'b10;
                                 col1Cap <= col1Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd2:   if(col2Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 2 + (col2Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col2Cap][selectedCol] <= 2'b10;
                                 col2Cap <= col2Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd3:   if(col3Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 3 + (col3Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col3Cap][selectedCol] <= 2'b10;
                                 col3Cap <= col3Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd0:   if(col4Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 4 + (col4Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col4Cap][selectedCol] <= 2'b10;
                                 col4Cap <= col4Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd5:   if(col5Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 5 + (col5Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col5Cap][selectedCol] <= 2'b10;
                                 col5Cap <= col5Cap + 1;
                                 validMove <= 1'b1;
                             end
                     1'd6:   if(col6Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
-                                selectedCell <= 6 + (col6Cap * 2'd7);
-                                gameBoard[selectedCell] <= 2'b10;
+                                gameBoard[col6Cap][selectedCol] <= 2'b10;
                                 col6Cap <= col6Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -379,15 +332,30 @@ begin
             /* INSERT WIN CONDITIONS HERE */
         end
         WIN2:   begin // game over screen: 2 wins
-            
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b10;
         end
         CHECK_DRAW: begin
             
         end
         DRAW:   begin // game over screen: draw
-            
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b11;
         end
     endcase
 end
 
 endmodule
+
