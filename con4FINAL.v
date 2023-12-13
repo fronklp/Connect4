@@ -204,7 +204,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 0 + (col0Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col0Cap <= col0Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -212,7 +212,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 1 + (col1Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col1Cap <= col1Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -220,7 +220,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 2 + (col2Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col2Cap <= col2Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -228,7 +228,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 3 + (col3Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col3Cap <= col3Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -236,7 +236,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 4 + (col4Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col4Cap <= col4Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -244,7 +244,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 5 + (col5Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col5Cap <= col5Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -252,7 +252,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 6 + (col6Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b01;
+                                gameBoard[selectedCell] <= 2'b01;
                                 col6Cap <= col6Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -273,7 +273,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 0 + (col0Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col0Cap <= col0Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -281,7 +281,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 1 + (col1Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col1Cap <= col1Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -289,7 +289,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 2 + (col2Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col2Cap <= col2Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -297,7 +297,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 3 + (col3Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col3Cap <= col3Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -305,7 +305,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 4 + (col4Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col4Cap <= col4Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -313,7 +313,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 5 + (col5Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col5Cap <= col5Cap + 1;
                                 validMove <= 1'b1;
                             end
@@ -321,7 +321,7 @@ begin
                                 validMove <= 1'b0;
                             else    begin
                                 selectedCell <= 6 + (col6Cap * 2'd7);
-                                gameboard[selectedCell] <= 2'b10;
+                                gameBoard[selectedCell] <= 2'b10;
                                 col6Cap <= col6Cap + 1;
                                 validMove <= 1'b1;
                             end
