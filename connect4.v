@@ -1,17 +1,17 @@
-module connect4 (
+module con4FINAL (
     input clk,
     input rst,
     input moveChosen,
     input direction,
-    output reg [1:0]gameBoard [5:0][6:0]
+    output reg [1:0]gameBoard [41:0]
 );
 reg [2:0]S; // current state
 reg [2:0]NS; // next state
 reg [2:0]C; // current column
 reg [2:0]NC; // next column
 reg validMove; // turns high when the selected move is valid
-reg 1wins; // turns high if player 1 wins
-reg 2wins; // turns high if player 2 wins
+reg win1; // turns high if player 1 wins
+reg win2; // turns high if player 2 wins
 reg drawFinal; // turns high if match is drawn
 reg [2:0]selectedCol; // holds the currently selected column
 reg selectedCell;
@@ -20,14 +20,7 @@ initial begin
     {col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap} = 3'b000; // init capacity as 0
 end
 initial begin // set the whole game board to 0
-    {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
-    gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
-    gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
-    gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
-    gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
-    gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
-    gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
-    } = 2'b00;
+    {gameBoard[0],} = 2'b00;
 end
 
 /* helper module instantiations */ 
@@ -40,21 +33,21 @@ checkMove checks(selectedMove, col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5
 */
 
 /* parameters to represent the states */
-parameter   P1_MOVE = 3'b000;
-            CHECK_1_WIN = 3'b001;
-            WIN1 = 3'b010;
-            P2_MOVE = 3'b011;
-            CHECK_2_WIN = 3'b100;
-            WIN2 = 3'b101;
-            CHECK_DRAW = 3'b110;
+parameter   P1_MOVE = 3'b000,
+            CHECK_1_WIN = 3'b001,
+            WIN1 = 3'b010,
+            P2_MOVE = 3'b011,
+            CHECK_2_WIN = 3'b100,
+            WIN2 = 3'b101,
+            CHECK_DRAW = 3'b110,
             DRAW = 3'b111;
 
-parameter   C_0 = 3'b000;
-            C_1 = 3'b001;
-            C_2 = 3'b010;
-            c_3 = 3'b011;
-            C_4 = 3'b100;
-            C_5 = 3'b101;
+parameter   C_0 = 3'b000,
+            C_1 = 3'b001,
+            C_2 = 3'b010,
+            C_3 = 3'b011,
+            C_4 = 3'b100,
+            C_5 = 3'b101,
             C_6 = 3'b110;
 
 /* S update always block */
@@ -77,7 +70,7 @@ begin
                 NS = P1_MOVE;
         end
         CHECK_1_WIN:    begin // either 1 wins is true, or move to player 2's move
-            if(1wins == 1'b1)
+            if(win1 == 1'b1)
                 NS = WIN1;
             else
                 NS = P2_MOVE;
@@ -90,7 +83,7 @@ begin
                 NS = P2_MOVE;
         end
         CHECK_2_WIN:    begin // either 2 wins is true, or move to check for a draw
-            if(2wins)
+            if(win2)
                 NS = WIN2;
             else   
                 NS = CHECK_DRAW;
@@ -121,7 +114,7 @@ begin
     case(C)
         C_0:    begin
             if(direction == 1'b0)
-                NC = c_1;
+                NC = C_1;
             else
                 NC = C_0;
         end
@@ -170,31 +163,31 @@ begin
     case(C)
         C_0:    begin
             selectedCol <= 3'b000;
-            #10
+            #10;
         end
         C_1:    begin
             selectedCol <= 3'b001;
-            #10
+            #10;
         end
         C_2:    begin
             selectedCol <= 3'b010;
-            #10
+            #10;
         end
         C_3:    begin
             selectedCol <= 3'b011;
-            #10
+            #10;
         end
         C_4:    begin
             selectedCol <= 3'b100;
-            #10
+            #10;
         end
         C_5:    begin
             selectedCol <= 3'b101;
-            #10
+            #10;
         end
         C_6:    begin
             selectedCol <= 3'b110;
-            #10
+            #10;
         end
 
     endcase
@@ -259,9 +252,8 @@ begin
                 endcase
         end
         CHECK_1_WIN:    begin
-            moveChosen <= 1'b0;
             validMove <= 1'b0;
-            if() /* INSERT WIN CONDITIONS HERE */
+            /* INSERT WIN CONDITIONS HERE */
 
         end
         WIN1:   begin // game over screen: 1 wins
@@ -329,9 +321,8 @@ begin
                 endcase
         end
         CHECK_2_WIN:    begin
-            moveChosen <= 1'b0;
             validMove <= 1'b0;
-            if() /* INSERT WIN CONDITIONS HERE */
+            /* INSERT WIN CONDITIONS HERE */
         end
         WIN2:   begin // game over screen: 2 wins
             {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
