@@ -2,7 +2,7 @@ module con4FINAL (
 		clk,
 		rst,
 		moveChosen,
-		direction, 
+		directionD, 
 		VGA_CLK,   						//	VGA Clock 
  		VGA_HS,							//	VGA H_SYNC 
  		VGA_VS,							//	VGA V_SYNC 
@@ -15,7 +15,7 @@ module con4FINAL (
 input clk,
 		rst,
 		moveChosen,
-		direction;
+		directionD;
 reg [2:0]S; // current state
 reg [2:0]NS; // next state
 reg [2:0]C; // current column
@@ -30,10 +30,10 @@ reg [2:0]col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap; // colum
 reg [1:0]gameBoard[41:0];
 /* VGA */
 wire [2:0]player_color;
-assign player_color = turn == 2'b01 ? 3'b100 : 3'b001;
 wire [1:0]turn;
 reg [7:0] cell_x; 
 reg [6:0] cell_y; 
+reg [8:0] i;
 
 initial begin
     {col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap} = 3'b000; // init capacity as 0
@@ -55,17 +55,17 @@ end
 	wire [7:0] x; 
  	wire [6:0] y; 
  	wire writeEn; 
-
+	
 	// Create an Instance of a VGA controller - there can be only one!
 	// Define the number of colours as well as the initial background
 	// image file (.MIF) for the controller.
 	vga_adapter VGA(
 			.resetn(rst),
 			.clock(clk),
-			.colour(player_color),
+			.colour(2'b10),
 			.x(cell_x),
-			.y(cell_y),
-			.plot(writeEn),
+			.y(7'd20),
+			.plot(1'b1),
 			/* Signals for the DAC to drive the monitor. */
 			.VGA_R(VGA_R),
 			.VGA_G(VGA_G),
@@ -78,7 +78,9 @@ end
 		defparam VGA.RESOLUTION = "160x120";		
 		defparam VGA.MONOCHROME = "FALSE";
 		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-		defparam VGA.BACKGROUND_IMAGE = "black.mif";
+		defparam VGA.BACKGROUND_IMAGE = "black1.mif";
+		
+		debouncer DEB(clk, rst, directionD, direction);
 /* parameters to represent the states */
 parameter   P1_MOVE = 3'b000,
             CHECK_1_WIN = 3'b001,
@@ -210,34 +212,55 @@ begin
     case(C)
         C_0:    begin
             selectedCol <= 3'b000;
-            #10;
         end
         C_1:    begin
             selectedCol <= 3'b001;
-            #10;
         end
         C_2:    begin
             selectedCol <= 3'b010;
-            #10;
         end
         C_3:    begin
             selectedCol <= 3'b011;
-            #10;
         end
         C_4:    begin
             selectedCol <= 3'b100;
-            #10;
         end
         C_5:    begin
             selectedCol <= 3'b101;
-            #10;
         end
         C_6:    begin
             selectedCol <= 3'b110;
-            #10;
         end
 
     endcase
+end
+
+/* Column VGA*/
+always@(posedge clk or negedge rst)
+begin
+	case(selectedCol)
+		3'b000:	begin
+			cell_x <= 7'd20;
+		end
+		3'b001:	begin
+			cell_x <= 7'd40;
+		end
+		3'b010:	begin
+			cell_x <= 7'd60;
+		end
+		3'b011:	begin
+			cell_x <= 7'd80;
+		end
+		3'b100:	begin
+			cell_x <= 7'd100;
+		end
+		3'b101:	begin
+			cell_x <= 7'd120;
+		end
+		3'b110:	begin
+			cell_x <= 7'd140;
+		end
+	endcase
 end
 
 /* clocked control signals always block */
@@ -306,6 +329,7 @@ begin
                 endcase
         end
         CHECK_1_WIN:    begin
+				
             validMove <= 1'b0;
             /* INSERT WIN CONDITIONS HERE */
 
@@ -388,6 +412,7 @@ begin
             
         end
     endcase
+	 
 end
 
 endmodule
