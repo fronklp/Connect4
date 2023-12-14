@@ -1,10 +1,21 @@
 module con4FINAL (
-    input clk,
-    input rst,
-    input moveChosen,
-    input direction,
-    output reg [1:0]gameBoard [41:0]
+		clk,
+		rst,
+		moveChosen,
+		directionD, 
+		VGA_CLK,   						//	VGA Clock 
+ 		VGA_HS,							//	VGA H_SYNC 
+ 		VGA_VS,							//	VGA V_SYNC 
+ 		VGA_BLANK_N,					//	VGA BLANK 
+ 		VGA_SYNC_N,						//	VGA SYNC 
+ 		VGA_R,   						//	VGA Red[9:0] 
+ 		VGA_G,	 						//	VGA Green[9:0] 
+ 		VGA_B   							//	VGA Blue[9:0] 
 );
+input clk,
+		rst,
+		moveChosen,
+		directionD;
 reg [2:0]S; // current state
 reg [2:0]NS; // next state
 reg [2:0]C; // current column
@@ -16,22 +27,60 @@ reg drawFinal; // turns high if match is drawn
 reg [2:0]selectedCol; // holds the currently selected column
 reg [7:0]selectedCell;
 reg [2:0]col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap; // column capacity
+reg [1:0]gameBoard[41:0];
+/* VGA */
+reg [2:0]player_color;
+wire [1:0]turn;
+reg [7:0] cell_x; 
+reg [6:0] cell_y; 
+reg [8:0] i;
+
 initial begin
     {col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap} = 3'b000; // init capacity as 0
 end
-initial begin // set the whole game board to 0
-    {gameBoard[0],} = 2'b00;
-end
 
 /* helper module instantiations */ 
-checkMove checks(selectedMove, col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap, validMove);
 
-/* IDEAS TO IMPLEMENT:
-~Give each column a count to determine which cell to drop into
-~
 
-*/
+// VGA OUTS
+ 	output			VGA_CLK;   				//	VGA Clock 
+ 	output			VGA_HS;					//	VGA H_SYNC 
+ 	output			VGA_VS;					//	VGA V_SYNC 
+ 	output			VGA_BLANK_N;				//	VGA BLANK 
+ 	output			VGA_SYNC_N;				//	VGA SYNC 
+ 	output	[9:0]	VGA_R;   				//	VGA Red[9:0] 
+ 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0] 
+ 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0] 
 
+	wire [7:0] x; 
+ 	wire [6:0] y; 
+ 	reg writeEn; 
+	
+	// Create an Instance of a VGA controller - there can be only one!
+	// Define the number of colours as well as the initial background
+	// image file (.MIF) for the controller.
+	vga_adapter VGA(
+			.resetn(rst),
+			.clock(clk),
+			.colour(player_color),
+			.x(cell_x),
+			.y(cell_y),
+			.plot(writeEn),
+			/* Signals for the DAC to drive the monitor. */
+			.VGA_R(VGA_R),
+			.VGA_G(VGA_G),
+			.VGA_B(VGA_B),
+			.VGA_HS(VGA_HS),
+			.VGA_VS(VGA_VS),
+			.VGA_BLANK(VGA_BLANK_N),
+			.VGA_SYNC(VGA_SYNC_N),
+			.VGA_CLK(VGA_CLK));
+		defparam VGA.RESOLUTION = "160x120";		
+		defparam VGA.MONOCHROME = "FALSE";
+		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+		defparam VGA.BACKGROUND_IMAGE = "black1.mif";
+		
+		debouncer DEB(clk, rst, directionD, direction);
 /* parameters to represent the states */
 parameter   P1_MOVE = 3'b000,
             CHECK_1_WIN = 3'b001,
@@ -157,40 +206,76 @@ begin
     endcase
 end
 
+
 /* changes the selected column variable based on the column state*/
 always @(posedge clk or negedge rst)
 begin
     case(C)
         C_0:    begin
             selectedCol <= 3'b000;
-            #10;
         end
         C_1:    begin
             selectedCol <= 3'b001;
-            #10;
         end
         C_2:    begin
             selectedCol <= 3'b010;
-            #10;
         end
         C_3:    begin
             selectedCol <= 3'b011;
-            #10;
         end
         C_4:    begin
             selectedCol <= 3'b100;
-            #10;
         end
         C_5:    begin
             selectedCol <= 3'b101;
-            #10;
         end
         C_6:    begin
             selectedCol <= 3'b110;
-            #10;
         end
 
     endcase
+end
+
+/* Column VGA */
+always@(posedge clk or negedge rst)
+begin
+	case(selectedCol)
+		3'b000:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd32;
+			cell_y <= 8'd20;
+		end
+		3'b001:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd48;
+			cell_y <= 8'd20;
+		end
+		3'b010:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd64;
+			cell_y <= 8'd20;
+		end
+		3'b011:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd80;
+			cell_y <= 8'd20;
+		end
+		3'b100:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd96;
+			cell_y <= 8'd20;
+		end
+		3'b101:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd112;
+			cell_y <= 8'd20;
+		end
+		3'b110:	begin
+			writeEn <= 1'b1;
+			cell_x <= 8'd128;
+			cell_y <= 8'd20;
+		end
+	endcase
 end
 
 /* clocked control signals always block */
@@ -199,7 +284,7 @@ begin
     case(S)
         P1_MOVE:    begin
             if(moveChosen == 1'b0)
-                case(selectedCol)
+                case(selectedCol) // for the selected column, check if it's full or add at proper row
                     1'd0:   if(col0Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
@@ -260,7 +345,6 @@ begin
         end
         CHECK_1_WIN:    begin
             validMove <= 1'b0;
-            /* INSERT WIN CONDITIONS HERE */
 
         end
         WIN1:   begin // game over screen: 1 wins
@@ -268,7 +352,7 @@ begin
         end
         P2_MOVE:    begin
             if(moveChosen == 1'b0)
-                case(selectedCol)
+                case(selectedCol) // for the selected column, check if it's full or add at proper row
                     1'd0:   if(col0Cap >= 1'd6)
                                 validMove <= 1'b0;
                             else    begin
@@ -329,7 +413,7 @@ begin
         end
         CHECK_2_WIN:    begin
             validMove <= 1'b0;
-            /* INSERT WIN CONDITIONS HERE */
+					
         end
         WIN2:   begin // game over screen: 2 wins
             
@@ -340,7 +424,297 @@ begin
         DRAW:   begin // game over screen: draw
             
         end
-    endcase
+	 endcase
+end
+
+always@(*)
+begin
+	/* Player 1 Check */
+	// All Vertical Wins
+	if((gameBoard[0] && gameBoard[7] && gameBoard[14] && gameBoard[21]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[28] && gameBoard[7] && gameBoard[14] && gameBoard[21]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[28] && gameBoard[35] && gameBoard[14] && gameBoard[21]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[1] && gameBoard[8] && gameBoard[15] && gameBoard[22]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[29] && gameBoard[8] && gameBoard[15] && gameBoard[22]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[29] && gameBoard[36] && gameBoard[15] && gameBoard[22]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[2] && gameBoard[9] && gameBoard[16] && gameBoard[23]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[30] && gameBoard[9] && gameBoard[16] && gameBoard[23]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[30] && gameBoard[37] && gameBoard[16] && gameBoard[23]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[3] && gameBoard[10] && gameBoard[17] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[31] && gameBoard[10] && gameBoard[17] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[31] && gameBoard[38] && gameBoard[17] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[4] && gameBoard[11] && gameBoard[18] && gameBoard[25]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[32] && gameBoard[11] && gameBoard[18] && gameBoard[25]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[32] && gameBoard[39] && gameBoard[18] && gameBoard[25]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[5] && gameBoard[12] && gameBoard[19] && gameBoard[26]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[33] && gameBoard[12] && gameBoard[19] && gameBoard[26]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[33] && gameBoard[40] && gameBoard[19] && gameBoard[26]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[6] && gameBoard[13] && gameBoard[20] && gameBoard[27]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[34] && gameBoard[13] && gameBoard[20] && gameBoard[27]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[34] && gameBoard[41] && gameBoard[20] && gameBoard[27]) == 2'b01)
+		win1 = 1'b1;
+	// All Horizontal Wins
+	if((gameBoard[0] && gameBoard[1] && gameBoard[2] && gameBoard[3]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[4] && gameBoard[1] && gameBoard[2] && gameBoard[3]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[4] && gameBoard[5] && gameBoard[2] && gameBoard[3]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[4] && gameBoard[5] && gameBoard[6] && gameBoard[3]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[7] && gameBoard[8] && gameBoard[9] && gameBoard[10]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[11] && gameBoard[8] && gameBoard[9] && gameBoard[10]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[11] && gameBoard[12] && gameBoard[9] && gameBoard[10]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[11] && gameBoard[12] && gameBoard[13] && gameBoard[10]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[14] && gameBoard[15] && gameBoard[16] && gameBoard[17]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[18] && gameBoard[15] && gameBoard[16] && gameBoard[17]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[18] && gameBoard[19] && gameBoard[16] && gameBoard[17]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[18] && gameBoard[19] && gameBoard[20] && gameBoard[17]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[21] && gameBoard[22] && gameBoard[23] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[25] && gameBoard[22] && gameBoard[23] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[25] && gameBoard[26] && gameBoard[23] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[25] && gameBoard[26] && gameBoard[27] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[28] && gameBoard[29] && gameBoard[30] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[32] && gameBoard[29] && gameBoard[30] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[32] && gameBoard[33] && gameBoard[30] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[32] && gameBoard[33] && gameBoard[34] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[35] && gameBoard[36] && gameBoard[37] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[39] && gameBoard[36] && gameBoard[37] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[39] && gameBoard[40] && gameBoard[37] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[39] && gameBoard[40] && gameBoard[41] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+	// All diagonal wins
+	if((gameBoard[0] && gameBoard[8] && gameBoard[16] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[1] && gameBoard[9] && gameBoard[17] && gameBoard[25]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[2] && gameBoard[10] && gameBoard[18] && gameBoard[26]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[3] && gameBoard[11] && gameBoard[19] && gameBoard[27]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[3] && gameBoard[9] && gameBoard[15] && gameBoard[21]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[4] && gameBoard[10] && gameBoard[16] && gameBoard[22]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[5] && gameBoard[11] && gameBoard[17] && gameBoard[23]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[6] && gameBoard[12] && gameBoard[18] && gameBoard[24]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[7] && gameBoard[15] && gameBoard[23] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[8] && gameBoard[16] && gameBoard[24] && gameBoard[32]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[9] && gameBoard[17] && gameBoard[25] && gameBoard[33]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[10] && gameBoard[18] && gameBoard[26] && gameBoard[34]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[10] && gameBoard[16] && gameBoard[22] && gameBoard[28]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[11] && gameBoard[17] && gameBoard[23] && gameBoard[29]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[12] && gameBoard[18] && gameBoard[24] && gameBoard[30]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[13] && gameBoard[19] && gameBoard[25] && gameBoard[31]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[14] && gameBoard[22] && gameBoard[30] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[15] && gameBoard[23] && gameBoard[31] && gameBoard[39]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[16] && gameBoard[24] && gameBoard[32] && gameBoard[40]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[17] && gameBoard[25] && gameBoard[33] && gameBoard[41]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[17] && gameBoard[23] && gameBoard[29] && gameBoard[35]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[18] && gameBoard[24] && gameBoard[30] && gameBoard[36]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[19] && gameBoard[25] && gameBoard[31] && gameBoard[37]) == 2'b01)
+		win1 = 1'b1;
+	if((gameBoard[20] && gameBoard[26] && gameBoard[32] && gameBoard[38]) == 2'b01)
+		win1 = 1'b1;
+		
+	/* Player 2 Check */
+	// All Vertical Wins
+	if((gameBoard[0] && gameBoard[7] && gameBoard[14] && gameBoard[21]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[28] && gameBoard[7] && gameBoard[14] && gameBoard[21]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[28] && gameBoard[35] && gameBoard[14] && gameBoard[21]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[1] && gameBoard[8] && gameBoard[15] && gameBoard[22]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[29] && gameBoard[8] && gameBoard[15] && gameBoard[22]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[29] && gameBoard[36] && gameBoard[15] && gameBoard[22]) == 2'b01)
+		win2 = 1'b1;
+	if((gameBoard[2] && gameBoard[9] && gameBoard[16] && gameBoard[23]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[30] && gameBoard[9] && gameBoard[16] && gameBoard[23]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[30] && gameBoard[37] && gameBoard[16] && gameBoard[23]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[3] && gameBoard[10] && gameBoard[17] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[31] && gameBoard[10] && gameBoard[17] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[31] && gameBoard[38] && gameBoard[17] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[4] && gameBoard[11] && gameBoard[18] && gameBoard[25]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[32] && gameBoard[11] && gameBoard[18] && gameBoard[25]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[32] && gameBoard[39] && gameBoard[18] && gameBoard[25]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[5] && gameBoard[12] && gameBoard[19] && gameBoard[26]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[33] && gameBoard[12] && gameBoard[19] && gameBoard[26]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[33] && gameBoard[40] && gameBoard[19] && gameBoard[26]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[6] && gameBoard[13] && gameBoard[20] && gameBoard[27]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[34] && gameBoard[13] && gameBoard[20] && gameBoard[27]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[34] && gameBoard[41] && gameBoard[20] && gameBoard[27]) == 2'b10)
+		win2 = 1'b1;
+	// All Horizontal Wins
+	if((gameBoard[0] && gameBoard[1] && gameBoard[2] && gameBoard[3]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[4] && gameBoard[1] && gameBoard[2] && gameBoard[3]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[4] && gameBoard[5] && gameBoard[2] && gameBoard[3]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[4] && gameBoard[5] && gameBoard[6] && gameBoard[3]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[7] && gameBoard[8] && gameBoard[9] && gameBoard[10]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[11] && gameBoard[8] && gameBoard[9] && gameBoard[10]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[11] && gameBoard[12] && gameBoard[9] && gameBoard[10]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[11] && gameBoard[12] && gameBoard[13] && gameBoard[10]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[14] && gameBoard[15] && gameBoard[16] && gameBoard[17]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[18] && gameBoard[15] && gameBoard[16] && gameBoard[17]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[18] && gameBoard[19] && gameBoard[16] && gameBoard[17]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[18] && gameBoard[19] && gameBoard[20] && gameBoard[17]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[21] && gameBoard[22] && gameBoard[23] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[25] && gameBoard[22] && gameBoard[23] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[25] && gameBoard[26] && gameBoard[23] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[25] && gameBoard[26] && gameBoard[27] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[28] && gameBoard[29] && gameBoard[30] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[32] && gameBoard[29] && gameBoard[30] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[32] && gameBoard[33] && gameBoard[30] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[32] && gameBoard[33] && gameBoard[34] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[35] && gameBoard[36] && gameBoard[37] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[39] && gameBoard[36] && gameBoard[37] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[39] && gameBoard[40] && gameBoard[37] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[39] && gameBoard[40] && gameBoard[41] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
+	// All diagonal wins
+	if((gameBoard[0] && gameBoard[8] && gameBoard[16] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[1] && gameBoard[9] && gameBoard[17] && gameBoard[25]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[2] && gameBoard[10] && gameBoard[18] && gameBoard[26]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[3] && gameBoard[11] && gameBoard[19] && gameBoard[27]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[3] && gameBoard[9] && gameBoard[15] && gameBoard[21]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[4] && gameBoard[10] && gameBoard[16] && gameBoard[22]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[5] && gameBoard[11] && gameBoard[17] && gameBoard[23]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[6] && gameBoard[12] && gameBoard[18] && gameBoard[24]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[7] && gameBoard[15] && gameBoard[23] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[8] && gameBoard[16] && gameBoard[24] && gameBoard[32]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[9] && gameBoard[17] && gameBoard[25] && gameBoard[33]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[10] && gameBoard[18] && gameBoard[26] && gameBoard[34]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[10] && gameBoard[16] && gameBoard[22] && gameBoard[28]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[11] && gameBoard[17] && gameBoard[23] && gameBoard[29]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[12] && gameBoard[18] && gameBoard[24] && gameBoard[30]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[13] && gameBoard[19] && gameBoard[25] && gameBoard[31]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[14] && gameBoard[22] && gameBoard[30] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[15] && gameBoard[23] && gameBoard[31] && gameBoard[39]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[16] && gameBoard[24] && gameBoard[32] && gameBoard[40]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[17] && gameBoard[25] && gameBoard[33] && gameBoard[41]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[17] && gameBoard[23] && gameBoard[29] && gameBoard[35]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[18] && gameBoard[24] && gameBoard[30] && gameBoard[36]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[19] && gameBoard[25] && gameBoard[31] && gameBoard[37]) == 2'b10)
+		win2 = 1'b1;
+	if((gameBoard[20] && gameBoard[26] && gameBoard[32] && gameBoard[38]) == 2'b10)
+		win2 = 1'b1;
 end
 
 endmodule
+
