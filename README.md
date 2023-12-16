@@ -32,16 +32,23 @@ I would like to credit Sonny Grooms for lending us his VGA, which he got from Ob
 Project Design:
 
 Turn-Based FSM Setup:
-
+--
 P1_MOVE:     The game starts on player 1's move. The FSM moves to CHECK_1_WIN once validMove goes high (see "Column Selecting" below).
-CHECK_1_WIN: If win = 1, move to WIN1 (see "Win Coditions" below). Otherwise move to P2_MOVE.
-WIN1:        End state if player 1 wins, remain here until reset.
-P2_MOVE:     The FSM moves to CHECK_2_WIN once validMove goes high (see "Column Selecting" below).
-CHECK_2_WIN: If win = 2, move to WIN2 (see "Win Coditions" below). Otherwise move to CHECK_DRAW.
-WIN2:        End state if player 2 wins, remain here until reset.
-CHECK_DRAW:  Go to DRAW if drawn = 1 (only necessary after P2_MOVE). Otherwise move to P1_MOVE.
-DRAW:        End state if players draw, remain here until reset.
 
+CHECK_1_WIN: If win = 1, move to WIN1 (see "Win Coditions" below). Otherwise move to P2_MOVE.
+
+WIN1:        End state if player 1 wins, remain here until reset.
+
+P2_MOVE:     The FSM moves to CHECK_2_WIN once validMove goes high (see "Column Selecting" below).
+
+CHECK_2_WIN: If win = 2, move to WIN2 (see "Win Coditions" below). Otherwise move to CHECK_DRAW.
+
+WIN2:        End state if player 2 wins, remain here until reset.
+
+CHECK_DRAW:  Go to DRAW if drawn = 1 (only necessary after P2_MOVE). Otherwise move to P1_MOVE.
+
+DRAW:        End state if players draw, remain here until reset.
+--
 Column Selecting:  
 Each column is an adjacent state in an FSM. The FSM moves to the next state (column) when direction goes high. When moveChosen goes high in any column, the col#Capacity is checked to make sure the column isn't full. validMove goes high if the column has open spaces, initiating drop logic and moving the main FSM to the next state.
 
