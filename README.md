@@ -30,7 +30,7 @@ I would like to credit Sonny Grooms for lending us his VGA, which he got from Ob
 
 
 Project Design:
-
+--
 Turn-Based FSM Setup:
 --
 P1_MOVE:     The game starts on player 1's move. The FSM moves to CHECK_1_WIN once validMove goes high (see "Column Selecting" below).
@@ -61,5 +61,17 @@ Win Conditions:
 Each player has 69 possible ways to win the game, creating a total of 138 wins on the board. The main module is constantly checking
 all 138 wins, using a 4-input AND gate to check if four squares are connected verticall, horizontally or diagonally.
 The "win" variable is set to 1 or 2 if player 1 or 2 wins, respectively.
+
+VGA
+--
+As stated previously, our VGA was borrowed by Obed Amaning-Yeboah. We used the VGA by instantiating it in the main module and used the FPGA pinouts to give inputs to the VGA. 
+
+Conclusion and Final Results
+--
+Our final product fell far short of the intended function. The project can successfully connect to the VGA and display the initially selected column. Once the direction button is pressed to move to the next column, the column FSM is rapidly traversed and the VGA displays all columns to be selected at the same time. 
+
+To fix this issue, the Column Selecting FSM must be modified to have an idling state which waits until the direction button goes back low. A functioning debouncer must also be implemented to keep the signal steady.
+
+Once this issue is resolved, cell selection must be sequentially transmitted to the VGA in order to display the proper drop logic.
 
 
