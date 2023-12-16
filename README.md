@@ -5,11 +5,11 @@ Authors: Keegan Alvis, Liam Fronk, Graeme Welsh
 # Connect4 with AI
 Game/Problem Description:
 
-This project is a Connect 4 game created to play against an AI in verilog. We did created our design utilizing an FPGA board (DE2-115) and VGA files to implement our design onto a screen. The user uses the FPGA inputs to choose the coloumn they want to place their piece in, and the game progresses on until connect 4 is achieved or the game is drawn.
+This project is a Connect 4 game created to play against an AI in verilog. We created our design utilizing an FPGA board (DE2-115) and VGA files to implement our design onto a monitor. The user uses the FPGA inputs to choose the coloumn they want to place their piece in. Once they place their piece, win conditions are checked. If no win conditions are met, the opponent's move will automatically be chosen by the AI. Win conditions are once again checked and the turn is sent back to the user.
 
 Background Information:
 
-Connect 4 is a very popular game from our childhood, with the whole idea behind it being to connect 4 of your pieces in a row on a grid before your opponent can by taking turns dropping pieces. We wanted to take this game, and add a twist: implementing an AI. We had different ideas for our AI, a simple randomizer that can place a piece anywhere, or trying to input a minmax AI to smartly place pieces according to where the player has last played. We chose to make our grid a 6x7, giving us 138 total winning combinations (AI and player combined). Using the buttons, the user is able to select the coloumn they want to drop their piece in and presses another button to actually drop their piece. After their move is finished, the AI will then place its piece and the user will be up to play again. We used one of the switches to act as our reset switch, to turn the screen off then back on to restart the game once someone wins or the game ends in a draw (meaning the whole board is fully filled up without anyone obtaining one of the winning states). 
+Connect 4 is a very popular game from our childhood, with the whole idea behind it being to connect 4 of your pieces in a row on a grid before your opponent can by taking turns dropping pieces. We wanted to take this game, and add a twist: implementing an AI. We had different ideas for our AI, a simple randomizer that can place a piece anywhere, or trying to input a minmax AI to smartly place pieces according to where the player has last played. We chose to make our grid a 6x7, giving us 138 total winning combinations (AI and player combined).
 
 Project Design
 --
@@ -54,7 +54,8 @@ Our final product fell far short of the intended function. The project can succe
 
 To fix this issue, the Column Selecting FSM must be modified to have an idling state which waits until the direction button goes back low. A functioning debouncer must also be implemented to keep the signal steady.
 
-Once this issue is resolved, cell selection must be sequentially transmitted to the VGA in order to display the proper drop logic. We also recommend the implementation of a more sophisticated AI to improve the gaming experience.
+Once this issue is resolved, cell selection must be sequentially transmitted to the VGA in order to display the proper drop logic. To do so, sequentially change the VGA inputs cell_x and cell_y to transmit the selected cell's coordinates to the VGA.
+We also recommend the implementation of a more sophisticated AI to improve the gaming experience. 
 
 Video Testing:
 --
@@ -62,5 +63,5 @@ https://youtube.com/shorts/Sw712l3lS1Y?si=woICKOnuC0QyFRO1
 
 Citations/VGA Credits:
 --
-I would like to credit Sonny Grooms for lending us his VGA, which he got from Obed Amaning-Yeboah. I would also like to credit tahmid-haque (GitHub username) as we used his image file to create our grid. 
+We would like to credit Sonny Grooms for lending us his VGA, which he got from Obed Amaning-Yeboah. We would also like to credit tahmid-haque (GitHub username) as we used his image file to create our grid. 
 
