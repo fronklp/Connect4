@@ -15,7 +15,8 @@ Connect4 is a very popular game from our childhood, with the whole idea behind i
 
 Verilog Files:
 
-At first, we implemented the checkCellState, checkDiagonal, checkHorizontal, and checkVert files to check what blocks in the grid had pieces in them and to check for different win conditions. After playing around with the code however, we decided to scrap these and state all our win conditions in a loop. 
+At first, we implemented the checkCellState, checkDiagonal, checkHorizontal, and checkVert files to check what blocks in the grid had pieces in them and to check for different win conditions. After playing around with the code however, we decided to scrap these and state all our win conditions in a loop.  Con4final.v is a module that contains all of the game logic for connect 4. It contains our Finite state machine that allows the game to function, the player move handling, and all of the win checks for the board.  It also contains the inputs and outputs for player moves, the board, and the VGA outputs.  The vga_adapter.v, vga_address_translator.v, and vga_controller.v are all responsible for outputting the connect 4 game onto the monitor via vga cable.  
+
 
 
 Video Testing:
