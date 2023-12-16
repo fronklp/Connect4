@@ -1,0 +1,363 @@
+module con4FINAL (
+    input clk,
+    input rst,
+    input moveChosen,
+    input direction,
+    output reg [1:0]gameBoard [5:0][6:0]
+);
+reg [2:0]S; // current state
+reg [2:0]NS; // next state
+reg [2:0]C; // current column
+reg [2:0]NC; // next column
+reg validMove; // turns high when the selected move is valid
+reg 1wins; // turns high if player 1 wins
+reg 2wins; // turns high if player 2 wins
+reg drawFinal; // turns high if match is drawn
+reg [2:0]selectedCol; // holds the currently selected column
+reg selectedCell;
+reg [2:0]col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap; // column capacity
+initial begin
+    {col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap} = 3'b000; // init capacity as 0
+end
+initial begin // set the whole game board to 0
+    {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+    gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+    gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+    gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+    gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+    gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+    gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+    } = 2'b00;
+end
+
+/* helper module instantiations */ 
+checkMove checks(selectedMove, col0Cap, col1Cap, col2Cap, col3Cap, col4Cap, col5Cap, col6Cap, validMove);
+
+/* IDEAS TO IMPLEMENT:
+~Give each column a count to determine which cell to drop into
+~
+
+*/
+
+/* parameters to represent the states */
+parameter   P1_MOVE = 3'b000;
+            CHECK_1_WIN = 3'b001;
+            WIN1 = 3'b010;
+            P2_MOVE = 3'b011;
+            CHECK_2_WIN = 3'b100;
+            WIN2 = 3'b101;
+            CHECK_DRAW = 3'b110;
+            DRAW = 3'b111;
+
+parameter   C_0 = 3'b000;
+            C_1 = 3'b001;
+            C_2 = 3'b010;
+            c_3 = 3'b011;
+            C_4 = 3'b100;
+            C_5 = 3'b101;
+            C_6 = 3'b110;
+
+/* S update always block */
+always @(posedge clk or negedge rst)
+begin
+    if(rst == 1'b0)
+        S <= P1_MOVE;
+    else
+        S <= NS;
+end
+
+/* NS transitions always block */
+always @(*)
+begin
+    case(S)
+        P1_MOVE: begin // once a valid move is selected, the next state will be win check 1
+            if(validMove == 1'b1)
+                NS = CHECK_1_WIN;
+            else   
+                NS = P1_MOVE;
+        end
+        CHECK_1_WIN:    begin // either 1 wins is true, or move to player 2's move
+            if(1wins == 1'b1)
+                NS = WIN1;
+            else
+                NS = P2_MOVE;
+        end
+        WIN1:   NS = WIN1; // remains in win state until reset
+        P2_MOVE: begin // once a valid move is selected, the next state will be win check 2
+            if(validMove == 2'b01)
+                NS = CHECK_2_WIN;
+            else   
+                NS = P2_MOVE;
+        end
+        CHECK_2_WIN:    begin // either 2 wins is true, or move to check for a draw
+            if(2wins)
+                NS = WIN2;
+            else   
+                NS = CHECK_DRAW;
+        end
+        CHECK_DRAW: begin // either drawFinal is true, or move to player 1's move
+            if(drawFinal)
+                NS = DRAW;
+            else   
+                NS = P1_MOVE;
+        end
+        DRAW:   NS = DRAW; // remains in draw state until reset
+    endcase
+
+end
+
+/* C update always block */
+always @(posedge clk or negedge rst)
+begin
+    if(rst == 1'b0)
+        C <= C_0;
+    else
+        C <= NC;
+end
+
+/* NC transitions always block */
+always @(*)
+begin
+    case(C)
+        C_0:    begin
+            if(direction == 1'b0)
+                NC = c_1;
+            else
+                NC = C_0;
+        end
+        C_1:    begin
+            if(direction == 1'b0)
+                NC = C_2;
+            else
+                NC = C_1;
+        end
+        C_2:    begin
+            if(direction == 1'b0)
+                NC = C_3;
+            else
+                NC = C_2;
+        end
+        C_3:    begin
+            if(direction == 1'b0)
+                NC = C_4;
+            else
+                NC = C_3;
+        end
+        C_4:    begin
+            if(direction == 1'b0)
+                NC = C_5;
+            else
+                NC = C_4;
+        end
+        C_5:    begin
+            if(direction == 1'b0)
+                NC = C_6;
+            else
+                NC = C_5;
+        end
+        C_6:    begin
+            if(direction == 1'b0)
+                NC = C_0;
+            else
+                NC = C_6;
+        end
+    endcase
+end
+
+/* changes the selected column variable based on the column state*/
+always @(posedge clk or negedge rst)
+begin
+    case(C)
+        C_0:    begin
+            selectedCol <= 3'b000;
+            #10
+        end
+        C_1:    begin
+            selectedCol <= 3'b001;
+            #10
+        end
+        C_2:    begin
+            selectedCol <= 3'b010;
+            #10
+        end
+        C_3:    begin
+            selectedCol <= 3'b011;
+            #10
+        end
+        C_4:    begin
+            selectedCol <= 3'b100;
+            #10
+        end
+        C_5:    begin
+            selectedCol <= 3'b101;
+            #10
+        end
+        C_6:    begin
+            selectedCol <= 3'b110;
+            #10
+        end
+
+    endcase
+end
+
+/* clocked control signals always block */
+always @(posedge clk or negedge rst)
+begin
+    case(S)
+        P1_MOVE:    begin
+            if(moveChosen == 1'b0)
+                case(selectedCol)
+                    1'd0:   if(col0Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col0Cap][selectedCol] <= 2'b01;
+                                col0Cap <= col0Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd1:   if(col1Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col1Cap][selectedCol] <= 2'b01;
+                                col1Cap <= col1Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd2:   if(col2Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col2Cap][selectedCol] <= 2'b01;
+                                col2Cap <= col2Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd3:   if(col3Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col3Cap][selectedCol] <= 2'b01;
+                                col3Cap <= col3Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd0:   if(col4Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col4Cap][selectedCol] <= 2'b01;
+                                col4Cap <= col4Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd5:   if(col5Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col5Cap][selectedCol] <= 2'b01;
+                                col5Cap <= col5Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd6:   if(col6Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col6Cap][selectedCol] <= 2'b01;
+                                col6Cap <= col6Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                endcase
+        end
+        CHECK_1_WIN:    begin
+            moveChosen <= 1'b0;
+            validMove <= 1'b0;
+            if() /* INSERT WIN CONDITIONS HERE */
+
+        end
+        WIN1:   begin // game over screen: 1 wins
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b01;
+        end
+        P2_MOVE:    begin
+            if(moveChosen == 1'b0)
+                case(selectedCol)
+                    1'd0:   if(col0Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col0Cap][selectedCol] <= 2'b10;
+                                col0Cap <= col0Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd1:   if(col0Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col1Cap][selectedCol] <= 2'b10;
+                                col1Cap <= col1Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd2:   if(col2Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col2Cap][selectedCol] <= 2'b10;
+                                col2Cap <= col2Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd3:   if(col3Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col3Cap][selectedCol] <= 2'b10;
+                                col3Cap <= col3Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd0:   if(col4Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col4Cap][selectedCol] <= 2'b10;
+                                col4Cap <= col4Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd5:   if(col5Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col5Cap][selectedCol] <= 2'b10;
+                                col5Cap <= col5Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                    1'd6:   if(col6Cap >= 1'd6)
+                                validMove <= 1'b0;
+                            else    begin
+                                gameBoard[col6Cap][selectedCol] <= 2'b10;
+                                col6Cap <= col6Cap + 1;
+                                validMove <= 1'b1;
+                            end
+                endcase
+        end
+        CHECK_2_WIN:    begin
+            moveChosen <= 1'b0;
+            validMove <= 1'b0;
+            if() /* INSERT WIN CONDITIONS HERE */
+        end
+        WIN2:   begin // game over screen: 2 wins
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b10;
+        end
+        CHECK_DRAW: begin
+            
+        end
+        DRAW:   begin // game over screen: draw
+            {gameBoard[0][0], gameBoard[1][0],gameBoard[2][0],gameBoard[3][0],gameBoard[4][0],gameBoard[5][0],
+            gameBoard[0][1], gameBoard[1][1],gameBoard[2][1],gameBoard[3][1],gameBoard[4][1],gameBoard[5][1],
+            gameBoard[0][2], gameBoard[1][2],gameBoard[2][2],gameBoard[3][2],gameBoard[4][2],gameBoard[5][2],
+            gameBoard[0][3], gameBoard[1][3],gameBoard[2][3],gameBoard[3][3],gameBoard[4][3],gameBoard[5][3],
+            gameBoard[0][4], gameBoard[1][4],gameBoard[2][4],gameBoard[3][4],gameBoard[4][4],gameBoard[5][4],
+            gameBoard[0][5], gameBoard[1][5],gameBoard[2][5],gameBoard[3][5],gameBoard[4][5],gameBoard[5][5],
+            gameBoard[0][6], gameBoard[1][6],gameBoard[2][6],gameBoard[3][6],gameBoard[4][6],gameBoard[5][6]
+            } = 2'b11;
+        end
+    endcase
+end
+
+endmodule
+
