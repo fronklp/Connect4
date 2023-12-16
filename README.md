@@ -48,7 +48,7 @@ WIN2:        End state if player 2 wins, remain here until reset.
 CHECK_DRAW:  Go to DRAW if drawn = 1 (only necessary after P2_MOVE). Otherwise move to P1_MOVE.
 
 DRAW:        End state if players draw, remain here until reset.
---
+
 Column Selecting:  
 Each column is an adjacent state in an FSM. The FSM moves to the next state (column) when direction goes high. When moveChosen goes high in any column, the col#Capacity is checked to make sure the column isn't full. validMove goes high if the column has open spaces, initiating drop logic and moving the main FSM to the next state.
 
